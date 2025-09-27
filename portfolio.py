@@ -1,0 +1,339 @@
+import os
+from flask import Flask, render_template_string, url_for
+
+# Initialize Flask application
+app = Flask(__name__)
+# IMPORTANT: For secure deployment, you must set this environment variable:
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key_for_samarth_portfolio')
+
+# --- USER PROFILE DATA ---
+USER_DATA = {
+    "name": "Samarth Mathwad",
+    "title": "2nd Year Computer Engineering Student",
+    "tagline": "Exploring AI and Full-Stack Development with a focus on impactful solutions.",
+    # The 'short_intro' text is now used within 'about' for a cleaner hero section.
+    "about": "A highly motivated 2nd-year Computer Engineering student at RMD Sinhgad College, Pune. I am deeply enthusiastic about leveraging technology, with a foundational expertise in Python, Flask, and Java, and a strong aspiration to specialize in Artificial Intelligence. My background includes technical writing and content management, skills vital for translating complex engineering concepts into accessible communications.",
+    "education": {
+        "institution": "RMD Sinhgad College of Engineering, Pune",
+        "degree": "B.E. Computer Engineering",
+        "years": "2024 - 2028 (Expected)",
+    },
+    "experience": {
+        "title": "Intern, Content & Research",
+        "company": "Dhaal Pay",
+        "duration": "Feb 2024 - May 2024 (Mock)",
+        "details": [
+            "Managed and curated content for social media handles, significantly boosting engagement.",
+            "Wrote technical articles and created short video reels detailing emerging UPI scams in India.",
+            "Conducted independent research on digital payment security and user awareness, impacting external communications."
+        ],
+        "linkedin_link": "https://www.linkedin.com/company/dhaal-pay/"
+    },
+    "contact_email": "samarthmathwad@gmail.com",
+    "github_url": "https://github.com/SamarthMathwad", 
+    "linkedin_url": "https://www.linkedin.com/in/samarth-mathwad-4589b9135",
+    "leetcode_url": "https://leetcode.com/u/codecrusher101/",
+    "resume_pdf_url": "Samarth_Mathwad_Resume.pdf", # Keeping the URL in data but removing the button in HTML
+    "photo_url": "mypic.jpg", # File must be inside the 'static' folder
+    "skills": [
+        {"name": "Python", "category": "Backend/ML"},
+        {"name": "Flask Web Framework", "category": "Backend"},
+        {"name": "Java", "category": "Core/OOP"},
+        {"name": "Data Structures & Algos", "category": "Fundamental"},
+        {"name": "Git & GitHub", "category": "Version Control"},
+        {"name": "Tailwind CSS", "category": "Web Design"},
+        {"name": "HTML & Jinja", "category": "Templating"},
+        {"name": "SQL & PostgreSQL", "category": "Databases"},
+    ],
+    "projects": [
+        {
+            "title": "Personal Portfolio Website (LIVE)",
+            "description": "My first completed full-stack project, built with Python (Flask) for dynamic content rendering and deployed live to demonstrate production-ready code.",
+            "tech": ["Python", "Flask", "Tailwind CSS", "Deployment"],
+            "url": "#" 
+        },
+    ]
+}
+
+# --- HTML Template (Jinja2) for Corporate Theme ---
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ data.name }} | Computer Engineering Portfolio</title>
+    <!-- Favicon (SM Initials - Inline SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>SM</text></svg>">
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CORPORATE THEME STYLES */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Merriweather:wght@400;700&display=swap');
+        
+        /* Color Palette & Typography */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0f1c; /* Background: Charcoal Navy */
+            color: #f9fafb; /* Text (main): Off-White */
+            scroll-behavior: smooth;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Merriweather', serif; /* Headings: Executive/Trustworthy */
+            color: #f9fafb;
+        }
+        .text-accent-primary {
+            color: #2563eb; /* Primary Accent: Corporate Blue */
+        }
+        .text-accent-secondary {
+            color: #facc15; /* Secondary Accent: Muted Gold Highlight */
+        }
+        .text-secondary {
+            color: #94a3b8; /* Text (secondary): Slate Gray */
+        }
+
+        /* Hero Section Gradient Background */
+        .hero-gradient {
+            background: linear-gradient(135deg, #0a0f1c, #1e3a8a);
+        }
+
+        /* Navbar Styling - Minimalist, Top Right */
+        .nav-fixed-top-right {
+            position: fixed;
+            top: 1.5rem; /* 6 units */
+            right: 2rem; /* 8 units */
+            background: rgba(10, 15, 28, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px; /* Rounded pill shape */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        .nav-link:hover {
+            color: #facc15;
+            text-decoration: underline;
+            text-decoration-color: #2563eb;
+            text-underline-offset: 4px;
+        }
+
+        /* Button Styling */
+        .btn-primary {
+            background: #2563eb; /* Corporate Blue */
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: #1e40af;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Card Styling */
+        .card {
+            background: #111827; /* Darker Card Background */
+            border-radius: 1rem; /* Rounded corners */
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4); /* Blue shadow on hover */
+            border: 1px solid #2563eb; /* Blue border glow */
+        }
+
+        /* Glowing Accent Underline (Used for Name) */
+        .accent-underline {
+            display: inline-block;
+            border-bottom: 4px solid #2563eb;
+            padding-bottom: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); /* Subtle glow */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Minimalist Navigation Bar (Fixed Top Right) -->
+    <nav class="nav-fixed-top-right hidden md:block">
+        <div class="flex space-x-4 text-sm font-medium">
+            <a href="#about" class="nav-link text-secondary hover:text-accent-secondary transition duration-300">About</a>
+            <a href="#experience" class="nav-link text-secondary hover:text-accent-secondary transition duration-300">Experience</a>
+            <a href="#projects" class="nav-link text-secondary hover:text-accent-secondary transition duration-300">Projects</a>
+            <a href="#contact" class="nav-link text-secondary hover:text-accent-secondary transition duration-300">Contact</a>
+        </div>
+    </nav>
+    
+    <div class="max-w-6xl mx-auto space-y-24">
+
+        <!-- 1. Header / Hero Section -->
+        <header id="about" class="hero-gradient p-8 sm:p-16 rounded-b-[2rem] shadow-2xl">
+            <div class="text-center space-y-6">
+                
+                <!-- Photo and Name Block (Centered Flex Row) -->
+                <div class="flex flex-col items-center md:flex-row md:justify-center md:space-x-12">
+                    
+                    <!-- Circular Profile Photo -->
+                    <div class="mb-6 md:mb-0 md:shrink-0">
+                        <img src="{{ url_for('static', filename=data.photo_url) }}" alt="Profile Photo of {{ data.name }}" 
+                             class="w-32 h-32 rounded-full object-cover border-4 border-[#2563eb] shadow-2xl ring-4 ring-[#1e3a8a]">
+                    </div>
+
+                    <!-- Name and Title Block (STACKED AND CENTERED) -->
+                    <div class="space-y-2 text-center"> 
+                        <h1 class="text-5xl md:text-7xl font-bold">
+                            <span class="accent-underline">{{ data.name }}</span>
+                        </h1>
+                        <p class="text-xl md:text-2xl font-medium text-secondary">
+                            {{ data.title }}
+                        </p>
+                    </div>
+                </div> 
+                
+                <!-- Tagline -->
+                <h2 class="text-2xl italic font-normal text-secondary max-w-3xl mx-auto pt-4 pb-8">
+                    "{{ data.tagline }}"
+                </h2>
+
+                <!-- About Section Card (Resume button removed) -->
+                <div class="card p-6 md:p-10 max-w-4xl mx-auto mt-8 border border-[#1e3a8a]">
+                    <p class="text-base text-secondary leading-relaxed text-left">
+                        {{ data.about }}
+                    </p>
+                    <!-- Download PDF Resume button removed as requested -->
+                </div>
+            </div>
+        </header>
+        
+        <!-- 2. Education Section (New) -->
+        <section id="education" class="px-4 sm:px-8 space-y-8">
+            <h2 class="text-4xl font-bold text-accent-primary">
+                <span class="text-accent-secondary">01.</span> Education
+            </h2>
+            <div class="card p-6 border-l-4 border-accent-primary">
+                <h3 class="text-2xl font-bold text-f9fafb">{{ data.education.institution }}</h3>
+                <p class="text-lg text-secondary">{{ data.education.degree }}</p>
+                <p class="text-accent-secondary text-sm italic mt-1">{{ data.education.years }}</p>
+            </div>
+        </section>
+
+        <!-- 3. Experience Section (New) -->
+        <section id="experience" class="px-4 sm:px-8 space-y-8">
+            <h2 class="text-4xl font-bold text-accent-primary">
+                <span class="text-accent-secondary">02.</span> Experience
+            </h2>
+            <div class="card">
+                <h3 class="text-2xl font-bold text-accent-primary">{{ data.experience.title }}</h3>
+                <h4 class="text-xl font-medium text-f9fafb">{{ data.experience.company }} <span class="text-secondary text-sm">({{ data.experience.duration }})</span></h4>
+                <ul class="list-disc list-inside text-secondary mt-4 space-y-2">
+                    {% for detail in data.experience.details %}
+                    <li>{{ detail }}</li>
+                    {% endfor %}
+                </ul>
+                <p class="text-sm text-secondary mt-4">Read my articles and check out my reels on <a href="{{ data.experience.linkedin_link }}" target="_blank" class="text-accent-primary hover:underline font-medium">Dhaal Pay's LinkedIn page</a>.</p>
+            </div>
+        </section>
+
+        <!-- 4. Projects Section -->
+        <section id="projects" class="px-4 sm:px-8 space-y-10">
+            <h2 class="text-4xl font-bold text-accent-primary">
+                <span class="text-accent-secondary">03.</span> Projects Showcase
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-8">
+                {% for project in data.projects %}
+                <div class="card">
+                    <h3 class="text-2xl font-bold text-accent-primary">{{ project.title }}</h3>
+                    <p class="text-secondary mt-3 text-base min-h-[50px]">{{ project.description }}</p>
+                    <div class="mt-5 flex flex-wrap gap-3">
+                        {% for tech in project.tech %}
+                        <span class="bg-[#1e3a8a] text-secondary text-sm font-medium px-4 py-1 rounded-full border border-secondary/20">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ project.url }}" target="_blank" class="mt-6 inline-block btn-primary text-sm transition duration-150">
+                        View Code/Details &rarr;
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 5. Skills Section -->
+        <section id="skills" class="px-4 sm:px-8 space-y-10">
+            <h2 class="text-4xl font-bold text-accent-primary">
+                <span class="text-accent-secondary">04.</span> Core Competencies
+            </h2>
+            <div class="card">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    {% for skill in data.skills %}
+                    <div class="flex flex-col items-center justify-center p-4 bg-[#0a0f1c] rounded-xl border border-[#1e3a8a] shadow-md transition duration-200 hover:border-accent-primary hover:shadow-2xl hover:shadow-[#2563eb]/20">
+                        <p class="text-lg font-semibold text-f9fafb">{{ skill.name }}</p>
+                        <p class="text-xs text-accent-secondary font-light mt-1 opacity-75">({{ skill.category }})</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Contact Section -->
+        <section id="contact" class="px-4 sm:px-8 text-center py-16 bg-[#111827] rounded-t-[2rem] shadow-inner border-t border-[#1e3a8a]">
+            <h2 class="text-4xl font-bold text-accent-primary mb-6">
+                <span class="text-accent-secondary">05.</span> Get in Touch
+            </h2>
+            <div class="max-w-xl mx-auto space-y-6">
+                <p class="text-lg text-secondary">
+                    I'm currently focused on skill development and open to connecting with professionals regarding internships or technical challenges. Reach out via email or connect on social media.
+                </p>
+                
+                <!-- Email Contact Button -->
+                <a href="mailto:{{ data.contact_email }}" class="inline-block btn-primary font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                    Email Samarth
+                </a>
+
+                <!-- Social Links in Footer Style -->
+                <div class="flex justify-center space-x-6 pt-6">
+                    <!-- 1. LinkedIn -->
+                    <a href="{{ data.linkedin_url }}" target="_blank" class="text-secondary hover:text-accent-primary transition duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M22.23 0H1.77C.8 0 0 .77 0 1.74v20.52C0 23.23.8 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.74V1.74C24 .77 23.2 0 22.23 0zM7.18 20.72H3.94V9.69h3.24v11.03zM5.56 8.35c-1.08 0-1.95-.89-1.95-1.98s.87-1.98 1.95-1.98 1.95.89 1.95 1.98-.87 1.98-1.95 1.98zM20.71 20.72h-3.24v-5.46c0-1.3-.47-2.19-1.63-2.19-.89 0-1.42.6-1.65 1.18-.08.2-.1.49-.1.79v5.68H11.2V9.69h3.24v1.39c.43-.66 1.18-1.59 3.01-1.59 2.19 0 3.84 1.43 3.84 4.54v6.69z"/></svg>
+                    </a>
+                    
+                    <!-- 2. LeetCode -->
+                    <a href="{{ data.leetcode_url }}" target="_blank" class="text-secondary hover:text-accent-secondary transition duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                           <path d="M12 0c6.627 0 12 5.373 12 12s-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0zm0 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zM12 5c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.14-7-7 3.14-7 7-7zm0 2c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+                        </svg>
+                    </a>
+
+                    <!-- 3. GitHub -->
+                    <a href="{{ data.github_url }}" target="_blank" class="text-secondary hover:text-f9fafb transition duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.418 2.864 8.136 6.83 9.497.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.374-1.34-3.374-1.34-.454-1.159-1.107-1.47-1.107-1.47-.905-.62.067-.608.067-.608 1.004.07 1.531 1.032 1.531 1.032.892 1.529 2.341 1.087 2.91.83.091-.643.356-1.087.643-1.342-2.22-.25-4.555-1.11-4.555-4.943 0-1.092.39-1.988 1.03-2.695-.103-.254-.447-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.23 9.23 0 0112 4.025c.85.004 1.705.115 2.504.332 1.908-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.396.098 2.65.64.707 1.029 1.603 1.029 2.695 0 3.844-2.336 4.686-4.939.358.308.675.918.675 1.852 0 1.342-.012 2.423-.012 2.753 0 .266.18.577.688.484C21.137 20.154 24 16.436 24 12.017 24 6.484 19.522 2 14 2h-2z" clip-rule="evenodd"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="text-center text-secondary text-sm pt-8 pb-4">
+            &copy; 2025 Samarth Mathwad. All Rights Reserved.
+        </footer>
+    </div>
+
+</body>
+</html>
+"""
+
+# --- Flask Routes ---
+@app.route('/')
+def home():
+    """Renders the portfolio homepage using the Jinja2 template string."""
+    try:
+        # url_for is used within the template when calling render_template_string
+        return render_template_string(HTML_TEMPLATE, data=USER_DATA, url_for=url_for)
+    except Exception as e:
+        return f"<h1>Internal Server Error</h1><p>Check the console for details: {e}</p>", 500
+
+# --- Run the Application ---
+if __name__ == '__main__':
+    # Using the os.environ.get('PORT', 5000) for deployment flexibility
+    print(f"--- Running Flask App: {USER_DATA['name']}'s Portfolio (Corporate Theme) ---")
+    app.run(debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000))
